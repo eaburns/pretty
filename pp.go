@@ -1,7 +1,8 @@
-// Package pp provides a pretty-printer for Go types.  It produces a
-// lightweight, Go-syntax-like output, but it is not intended to produce
-// valid Go syntax.  It elides a bunch of type information, leaving only
-// struct names.  It omits commas, and possibly much much more.
+//Package pp provides a pretty-printer for Go types. It produces a
+// lightweight, Go-syntax-like output.  It elides some type information
+// and syntactic details.  The intent is to show a data structure, such
+// as an abstract syntax tree, without much clutter.  It also supports
+// printing to the dot language of graphviz!
 package pp
 
 import (
