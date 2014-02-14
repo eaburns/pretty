@@ -15,7 +15,7 @@ import (
 
 // Print pretty-prints the value to the given writer.
 func Print(out io.Writer, v interface{}) (err error) {
-	defer func() {	
+	defer func() {
 		if r := recover(); r == nil {
 			return
 		} else if e, ok := r.(error); ok {
@@ -98,7 +98,7 @@ func pr(out io.Writer, f string, args ...interface{}) {
 
 // Print the value to the writer using the dot language of graphviz.
 func Dot(out io.Writer, v interface{}) (err error) {
-	defer func() {	
+	defer func() {
 		if r := recover(); r == nil {
 			return
 		} else if e, ok := r.(error); ok {
@@ -181,7 +181,7 @@ func node(out io.Writer, n int, f string, args ...interface{}) int {
 	if err != nil {
 		panic(err)
 	}
-	return n+1
+	return n + 1
 }
 
 func arc(out io.Writer, src, dst int, label string) {
