@@ -11,6 +11,7 @@ import (
 	"strconv"
 )
 
+// Print pretty-prints the value to the given writer.
 func Print(out io.Writer, v interface{}) (err error) {
 	defer func() {	
 		if r := recover(); r == nil {
