@@ -41,8 +41,7 @@ func print(out io.Writer, indent string, v reflect.Value) {
 	case reflect.Complex64, reflect.Complex128:
 		pr(out, "%f", v.Complex())
 
-	case reflect.Array:
-	case reflect.Slice:
+	case reflect.Array, reflect.Slice:
 		pr(out, "[")
 		indent2 := indent + "\t"
 		for i := 0; i < v.Len(); i++ {
@@ -52,7 +51,11 @@ func print(out io.Writer, indent string, v reflect.Value) {
 		pr(out, indent+"]")
 
 	case reflect.Interface, reflect.Ptr:
-		print(out, indent, v.Elem())
+		if v.IsNil() {
+			pr(out, "nil")
+		} else {
+			print(out, indent, v.Elem())
+		}
 
 	case reflect.String:
 		pr(out, strconv.Quote(v.String()))
@@ -62,8 +65,7 @@ func print(out io.Writer, indent string, v reflect.Value) {
 		pr(out, "%s {", t.Name())
 		indent2 := indent + "\t"
 		for i := 0; i < t.NumField(); i++ {
-			f := t.Field(i)
-			pr(out, "%s%s: ", indent2, f.Name)
+			pr(out, "%s%s: ", indent2, t.Field(i).Name)
 			print(out, indent2, v.Field(i))
 		}
 		pr(out, "%s}", indent)
@@ -76,11 +78,110 @@ func print(out io.Writer, indent string, v reflect.Value) {
 		pr(out, "<map>")
 	case reflect.UnsafePointer:
 		pr(out, "<unsafe pointer>")
+	case reflect.Invalid:
+		pr(out, "<invalid>")
 	}
 }
 
 func pr(out io.Writer, f string, args ...interface{}) {
 	if _, err := fmt.Fprintf(out, f, args...); err != nil {
+		panic(err)
+	}
+}
+
+// Print the value to the writer using the dot language of graphviz.
+func Dot(out io.Writer, v interface{}) (err error) {
+	defer func() {	
+		if r := recover(); r == nil {
+			return
+		} else if e, ok := r.(error); ok {
+			err = e
+		}
+	}()
+	if _, err = io.WriteString(out, "digraph {\n"); err != nil {
+		return err
+	}
+	dot(out, 0, reflect.ValueOf(v))
+	_, err = io.WriteString(out, "}")
+	return err
+}
+
+func dot(out io.Writer, n int, v reflect.Value) int {
+	switch v.Kind() {
+	case reflect.Bool:
+		return node(out, n, "%t", v.Bool())
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return node(out, n, "%d", v.Int())
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return node(out, n, "%d", v.Uint())
+
+	case reflect.Float32, reflect.Float64:
+		return node(out, n, "%f", v.Float())
+
+	case reflect.Complex64, reflect.Complex128:
+		return node(out, n, "%f", v.Complex())
+
+	case reflect.Array, reflect.Slice:
+		m := node(out, n, "%s[]", v.Type().Elem().Name())
+		for i := 0; i < v.Len(); i++ {
+			arc(out, n, m, "")
+			m = dot(out, m, v.Index(i))
+		}
+		return m
+
+	case reflect.Interface, reflect.Ptr:
+		if v.IsNil() {
+			return n
+		}
+		return dot(out, n, v.Elem())
+
+	case reflect.String:
+		return node(out, n, "%s", strconv.Quote(v.String()))
+
+	case reflect.Struct:
+		t := v.Type()
+		m := node(out, n, t.Name())
+		for i := 0; i < t.NumField(); i++ {
+			arc(out, n, m, t.Field(i).Name)
+			m = dot(out, m, v.Field(i))
+		}
+		return m
+
+	case reflect.Chan:
+		return node(out, n, "<chan>")
+	case reflect.Func:
+		return node(out, n, "<function>")
+	case reflect.Map:
+		return node(out, n, "<map>")
+	case reflect.UnsafePointer:
+		return node(out, n, "<unsafe pointer>")
+	case reflect.Invalid:
+		return node(out, n, "<invalid>")
+	}
+	panic("unreachable: " + v.Kind().String())
+}
+
+func node(out io.Writer, n int, f string, args ...interface{}) int {
+	s := fmt.Sprintf(f, args...)
+	_, err := fmt.Fprintf(out, "\tn%d [label=%s]\n", n, strconv.Quote(s))
+	if err != nil {
+		panic(err)
+	}
+	return n+1
+}
+
+func arc(out io.Writer, src, dst int, label string) {
+	if label == "" {
+		_, err := fmt.Fprintf(out, "\tn%d -> n%d\n", src, dst)
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+	_, err := fmt.Fprintf(out, "\tn%d -> n%d [label=%s]\n", src, dst, strconv.Quote(label))
+	if err != nil {
 		panic(err)
 	}
 }
