@@ -9,6 +9,8 @@ import (
 	"io"
 	"reflect"
 	"strconv"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Print pretty-prints the value to the given writer.
@@ -65,7 +67,12 @@ func print(out io.Writer, indent string, v reflect.Value) {
 		pr(out, "%s {", t.Name())
 		indent2 := indent + "\t"
 		for i := 0; i < t.NumField(); i++ {
-			pr(out, "%s%s: ", indent2, t.Field(i).Name)
+			f := t.Field(i)
+			if !exported(f.Name) {
+				// Don't output unexported fields.
+				continue
+			}
+			pr(out, "%s%s: ", indent2, f.Name)
 			print(out, indent2, v.Field(i))
 		}
 		pr(out, "%s}", indent)
@@ -133,7 +140,7 @@ func dot(out io.Writer, n int, v reflect.Value) int {
 
 	case reflect.Interface, reflect.Ptr:
 		if v.IsNil() {
-			return n
+			return node(out, n, "nil")
 		}
 		return dot(out, n, v.Elem())
 
@@ -144,7 +151,12 @@ func dot(out io.Writer, n int, v reflect.Value) int {
 		t := v.Type()
 		m := node(out, n, t.Name())
 		for i := 0; i < t.NumField(); i++ {
-			arc(out, n, m, t.Field(i).Name)
+			f := t.Field(i)
+			if !exported(f.Name) {
+				// Don't output unexported fields.
+				continue
+			}
+			arc(out, n, m, f.Name)
 			m = dot(out, m, v.Field(i))
 		}
 		return m
@@ -184,4 +196,12 @@ func arc(out io.Writer, src, dst int, label string) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func exported(n string) bool {
+	if len(n) == 0 {
+		return true
+	}
+	r, _ := utf8.DecodeRuneInString(n)
+	return unicode.IsUpper(r)
 }
