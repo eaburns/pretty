@@ -96,7 +96,7 @@ func pr(out io.Writer, f string, args ...interface{}) {
 	}
 }
 
-// Print the value to the writer using the dot language of graphviz.
+// Dot writes value to the writer using the dot language of graphviz.
 func Dot(out io.Writer, v interface{}) (err error) {
 	defer func() {
 		if r := recover(); r == nil {
