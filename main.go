@@ -3,6 +3,7 @@
 package main
 
 import (
+	"math/big"
 	"os"
 
 	"github.com/eaburns/pp"
@@ -13,6 +14,7 @@ type S struct {
 	C    []float64
 	D    T
 	E    string
+	F    *big.Int
 }
 
 type T struct {
@@ -22,7 +24,7 @@ type T struct {
 }
 
 func main() {
-	pp.Print(os.Stdout, S{
+	err := pp.Dot(os.Stdout, S{
 		A: 5,
 		B: 6,
 		C: []float64{3.14, 2.8},
@@ -32,6 +34,10 @@ func main() {
 			Z: 1.3838,
 		},
 		E: "Hello, Friends",
+		F: big.NewInt(1891284),
 	})
+	if err != nil {
+		panic(err)
+	}
 	os.Stdout.WriteString("\n")
 }

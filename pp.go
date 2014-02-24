@@ -28,6 +28,10 @@ func Print(out io.Writer, v interface{}) (err error) {
 }
 
 func print(out io.Writer, indent string, v reflect.Value) {
+	if strer, ok := v.Interface().(fmt.Stringer); ok {
+		pr(out, "%s", strer)
+		return
+	}
 	switch v.Kind() {
 	case reflect.Bool:
 		pr(out, "%t", v.Bool())
@@ -115,6 +119,9 @@ func Dot(out io.Writer, v interface{}) (err error) {
 }
 
 func dot(out io.Writer, n int, v reflect.Value) int {
+	if strer, ok := v.Interface().(fmt.Stringer); ok {
+		return node(out, n, "%s", strer)
+	}
 	switch v.Kind() {
 	case reflect.Bool:
 		return node(out, n, "%t", v.Bool())
