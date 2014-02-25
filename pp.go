@@ -16,13 +16,7 @@ import (
 
 // Print pretty-prints the value to the given writer.
 func Print(out io.Writer, v interface{}) (err error) {
-	defer func() {
-		if r := recover(); r == nil {
-			return
-		} else if e, ok := r.(error); ok {
-			err = e
-		}
-	}()
+	defer recoverErr(&err)
 	print(out, "\n", reflect.ValueOf(v))
 	return err
 }
@@ -103,13 +97,7 @@ func pr(out io.Writer, f string, args ...interface{}) {
 
 // Dot writes value to the writer using the dot language of graphviz.
 func Dot(out io.Writer, v interface{}) (err error) {
-	defer func() {
-		if r := recover(); r == nil {
-			return
-		} else if e, ok := r.(error); ok {
-			err = e
-		}
-	}()
+	defer recoverErr(&err)
 	if _, err = io.WriteString(out, "digraph {\n"); err != nil {
 		return err
 	}
@@ -212,4 +200,14 @@ func exported(n string) bool {
 	}
 	r, _ := utf8.DecodeRuneInString(n)
 	return unicode.IsUpper(r)
+}
+
+func recoverErr(err *error) {
+	if r := recover(); r == nil {
+		return
+	} else if e, ok := r.(error); ok {
+		*err = e
+	} else {
+		panic(*err)
+	}
 }

@@ -24,7 +24,7 @@ type T struct {
 }
 
 func main() {
-	err := pp.Dot(os.Stdout, S{
+	err := pp.Print(os.Stdout, S{
 		A: 5,
 		B: 6,
 		C: []float64{3.14, 2.8},
