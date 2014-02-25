@@ -15,6 +15,7 @@ type S struct {
 	D    T
 	E    string
 	F    *big.Int
+	S    *S
 }
 
 type T struct {
@@ -24,7 +25,7 @@ type T struct {
 }
 
 func main() {
-	err := pp.Print(os.Stdout, S{
+	s := S{
 		A: 5,
 		B: 6,
 		C: []float64{3.14, 2.8},
@@ -35,7 +36,9 @@ func main() {
 		},
 		E: "Hello, Friends",
 		F: big.NewInt(1891284),
-	})
+	}
+	s.S = &s
+	err := pp.Print(os.Stdout, &s)
 	if err != nil {
 		panic(err)
 	}

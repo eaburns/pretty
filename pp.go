@@ -15,13 +15,20 @@ import (
 )
 
 // Print pretty-prints the value to the given writer.
+// Print prunes cycles.  Recall that if you pass a cyclic object as a
+// value, a copy is made.  The copy is not part of the cycle.
 func Print(out io.Writer, v interface{}) (err error) {
 	defer recoverErr(&err)
-	print(out, "\n", reflect.ValueOf(v))
+	print(out, make(map[reflect.Value]bool), "\n", reflect.ValueOf(v))
 	return err
 }
 
-func print(out io.Writer, indent string, v reflect.Value) {
+func print(out io.Writer, seen map[reflect.Value]bool, indent string, v reflect.Value) {
+	if seen[v] {
+		pr(out, "<cycle>")
+		return
+	}
+	seen[v] = true
 	if strer, ok := v.Interface().(fmt.Stringer); ok {
 		pr(out, "%s", strer)
 		return
@@ -47,7 +54,7 @@ func print(out io.Writer, indent string, v reflect.Value) {
 		indent2 := indent + "\t"
 		for i := 0; i < v.Len(); i++ {
 			pr(out, indent2)
-			print(out, indent2, v.Index(i))
+			print(out, seen, indent2, v.Index(i))
 		}
 		pr(out, indent+"]")
 
@@ -55,7 +62,7 @@ func print(out io.Writer, indent string, v reflect.Value) {
 		if v.IsNil() {
 			pr(out, "nil")
 		} else {
-			print(out, indent, v.Elem())
+			print(out, seen, indent, v.Elem())
 		}
 
 	case reflect.String:
@@ -72,7 +79,7 @@ func print(out io.Writer, indent string, v reflect.Value) {
 				continue
 			}
 			pr(out, "%s%s: ", indent2, f.Name)
-			print(out, indent2, v.Field(i))
+			print(out, seen, indent2, v.Field(i))
 		}
 		pr(out, "%s}", indent)
 
