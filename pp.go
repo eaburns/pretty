@@ -23,12 +23,13 @@ func Print(out io.Writer, v interface{}) (err error) {
 	return err
 }
 
-func print(out io.Writer, seen map[reflect.Value]bool, indent string, v reflect.Value) {
-	if seen[v] {
+func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
+	if path[v] {
 		pr(out, "<cycle>")
 		return
 	}
-	seen[v] = true
+	path[v] = true
+	defer func() { path[v] = false }()
 	if strer, ok := v.Interface().(fmt.Stringer); ok {
 		pr(out, "%s", strer)
 		return
@@ -54,7 +55,7 @@ func print(out io.Writer, seen map[reflect.Value]bool, indent string, v reflect.
 		indent2 := indent + "\t"
 		for i := 0; i < v.Len(); i++ {
 			pr(out, indent2)
-			print(out, seen, indent2, v.Index(i))
+			print(out, path, indent2, v.Index(i))
 		}
 		pr(out, indent+"]")
 
@@ -62,7 +63,7 @@ func print(out io.Writer, seen map[reflect.Value]bool, indent string, v reflect.
 		if v.IsNil() {
 			pr(out, "nil")
 		} else {
-			print(out, seen, indent, v.Elem())
+			print(out, path, indent, v.Elem())
 		}
 
 	case reflect.String:
@@ -79,7 +80,7 @@ func print(out io.Writer, seen map[reflect.Value]bool, indent string, v reflect.
 				continue
 			}
 			pr(out, "%s%s: ", indent2, f.Name)
-			print(out, seen, indent2, v.Field(i))
+			print(out, path, indent2, v.Field(i))
 		}
 		pr(out, "%s}", indent)
 

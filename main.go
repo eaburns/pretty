@@ -15,6 +15,7 @@ type S struct {
 	D    T
 	E    string
 	F    *big.Int
+	G    *big.Int
 	S    *S
 }
 
@@ -25,6 +26,7 @@ type T struct {
 }
 
 func main() {
+	bi := big.NewInt(123)
 	s := S{
 		A: 5,
 		B: 6,
@@ -35,7 +37,8 @@ func main() {
 			Z: 1.3838,
 		},
 		E: "Hello, Friends",
-		F: big.NewInt(1891284),
+		F: bi,
+		G: bi,
 	}
 	s.S = &s
 	err := pp.Print(os.Stdout, &s)
