@@ -41,7 +41,7 @@ func main() {
 		G: bi,
 	}
 	s.S = &s
-	err := pp.Print(os.Stdout, &s)
+	err := pp.Dot(os.Stdout, &s)
 	if err != nil {
 		panic(err)
 	}

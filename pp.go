@@ -112,12 +112,16 @@ func Dot(out io.Writer, v interface{}) (err error) {
 	if _, err = io.WriteString(out, "digraph {\n"); err != nil {
 		return err
 	}
-	dot(out, 0, reflect.ValueOf(v))
+	dot(out, make(map[reflect.Value]int), 0, reflect.ValueOf(v))
 	_, err = io.WriteString(out, "}")
 	return err
 }
 
-func dot(out io.Writer, n int, v reflect.Value) int {
+func dot(out io.Writer, seen map[reflect.Value]int, n int, v reflect.Value) (nd, next int) {
+	if m, ok := seen[v]; ok {
+		return m, n
+	}
+	defer func() { seen[v] = nd }()
 	if strer, ok := v.Interface().(fmt.Stringer); ok {
 		return node(out, n, "%s", strer)
 	}
@@ -138,35 +142,41 @@ func dot(out io.Writer, n int, v reflect.Value) int {
 		return node(out, n, "%f", v.Complex())
 
 	case reflect.Array, reflect.Slice:
-		m := node(out, n, "%s[]", v.Type().Elem().Name())
+		_, next := node(out, n, "%s[]", v.Type().Elem().Name())
+		// Must see 'v' before recurring on dot.
+		seen[v] = n
 		for i := 0; i < v.Len(); i++ {
+			var m int
+			m, next = dot(out, seen, next, v.Index(i))
 			arc(out, n, m, "")
-			m = dot(out, m, v.Index(i))
 		}
-		return m
+		return n, next
 
 	case reflect.Interface, reflect.Ptr:
 		if v.IsNil() {
 			return node(out, n, "nil")
 		}
-		return dot(out, n, v.Elem())
+		return dot(out, seen, n, v.Elem())
 
 	case reflect.String:
 		return node(out, n, "%s", strconv.Quote(v.String()))
 
 	case reflect.Struct:
 		t := v.Type()
-		m := node(out, n, t.Name())
+		_, next := node(out, n, t.Name())
+		// Must see 'v' before recurring on dot.
+		seen[v] = n
 		for i := 0; i < t.NumField(); i++ {
 			f := t.Field(i)
 			if !exported(f.Name) {
 				// Don't output unexported fields.
 				continue
 			}
+			var m int
+			m, next = dot(out, seen, next, v.Field(i))
 			arc(out, n, m, f.Name)
-			m = dot(out, m, v.Field(i))
 		}
-		return m
+		return n, next
 
 	case reflect.Chan:
 		return node(out, n, "<chan>")
@@ -182,13 +192,13 @@ func dot(out io.Writer, n int, v reflect.Value) int {
 	panic("unreachable: " + v.Kind().String())
 }
 
-func node(out io.Writer, n int, f string, args ...interface{}) int {
+func node(out io.Writer, n int, f string, args ...interface{}) (nd, next int) {
 	s := fmt.Sprintf(f, args...)
 	_, err := fmt.Fprintf(out, "\tn%d [label=%s]\n", n, strconv.Quote(s))
 	if err != nil {
 		panic(err)
 	}
-	return n + 1
+	return n, n + 1
 }
 
 func arc(out io.Writer, src, dst int, label string) {
