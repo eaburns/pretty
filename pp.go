@@ -104,9 +104,6 @@ func pr(out io.Writer, f string, args ...interface{}) {
 }
 
 // Dot writes value to the writer using the dot language of graphviz.
-//
-// BUG(eaburns): Dot does not detect cycles; it crashes.  Instead, it
-// should create a cyclic graph.
 func Dot(out io.Writer, v interface{}) (err error) {
 	defer recoverErr(&err)
 	if _, err = io.WriteString(out, "digraph {\n"); err != nil {
