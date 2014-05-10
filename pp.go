@@ -24,6 +24,10 @@ func Print(out io.Writer, v interface{}) (err error) {
 }
 
 func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
+	if !v.IsValid() {
+		pr(out, "nil")
+		return
+	}
 	if path[v] {
 		pr(out, "<cycle>")
 		return
