@@ -10,8 +10,6 @@ import (
 	"io"
 	"reflect"
 	"strconv"
-	"unicode"
-	"unicode/utf8"
 )
 
 // Print pretty-prints the value to the given writer.
@@ -79,7 +77,7 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 		indent2 := indent + "\t"
 		for i := 0; i < t.NumField(); i++ {
 			f := t.Field(i)
-			if !exported(f.Name) {
+			if !exported(&f) {
 				// Don't output unexported fields.
 				continue
 			}
@@ -169,7 +167,7 @@ func dot(out io.Writer, seen map[reflect.Value]int, n int, v reflect.Value) (nd,
 		seen[v] = n
 		for i := 0; i < t.NumField(); i++ {
 			f := t.Field(i)
-			if !exported(f.Name) {
+			if !exported(&f) {
 				// Don't output unexported fields.
 				continue
 			}
@@ -216,12 +214,8 @@ func arc(out io.Writer, src, dst int, label string) {
 	}
 }
 
-func exported(n string) bool {
-	if len(n) == 0 {
-		return true
-	}
-	r, _ := utf8.DecodeRuneInString(n)
-	return unicode.IsUpper(r)
+func exported(f *reflect.StructField) bool {
+	return len(f.PkgPath) == 0
 }
 
 func recoverErr(err *error) {
