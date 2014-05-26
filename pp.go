@@ -10,6 +10,8 @@ import (
 	"io"
 	"reflect"
 	"strconv"
+
+	"github.com/eaburns/eq"
 )
 
 // Print pretty-prints the value to the given writer.
@@ -77,8 +79,8 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 		indent2 := indent + "\t"
 		for i := 0; i < t.NumField(); i++ {
 			f := t.Field(i)
-			if !exported(&f) {
-				// Don't output unexported fields.
+			if !exported(&f) || zero(v.Field(i)) {
+				// Don't output unexported fields or zero-valued fields.`
 				continue
 			}
 			pr(out, "%s%s: ", indent2, f.Name)
@@ -167,8 +169,8 @@ func dot(out io.Writer, seen map[reflect.Value]int, n int, v reflect.Value) (nd,
 		seen[v] = n
 		for i := 0; i < t.NumField(); i++ {
 			f := t.Field(i)
-			if !exported(&f) {
-				// Don't output unexported fields.
+			if !exported(&f) || zero(v.Field(i)) {
+				// Don't output unexported fields or zero-valued fields.
 				continue
 			}
 			var m int
@@ -226,4 +228,14 @@ func recoverErr(err *error) {
 	} else {
 		panic(*err)
 	}
+}
+
+// Returns true if the value is the zero value of its type, or if it is a
+// pointer to a zero value.
+func zero(v reflect.Value) bool {
+	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
+		return v.IsNil() || zero(v.Elem())
+	}
+	z := reflect.Zero(v.Type())
+	return eq.Deep(v.Interface(), z.Interface())
 }
