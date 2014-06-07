@@ -6,6 +6,7 @@
 package pp
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"reflect"
@@ -21,6 +22,25 @@ func Print(out io.Writer, v interface{}) (err error) {
 	defer recoverErr(&err)
 	print(out, make(map[reflect.Value]bool), "\n", reflect.ValueOf(v))
 	return err
+}
+
+// String wraps Print, printing the value to a string. If an error occurs, the empty string
+// is returned along with the error.
+func String(v interface{}) (string, error) {
+	buf := bytes.NewBuffer(nil)
+	if err := Print(buf, v); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+// MustString is just like String, but it panics on error.
+func MustString(v interface{}) string {
+	s, err := String(v)
+	if err != nil {
+		panic(err)
+	}
+	return s
 }
 
 func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
