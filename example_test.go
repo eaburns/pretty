@@ -1,6 +1,7 @@
-package pp
+package pretty
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -29,4 +30,17 @@ func ExamplePrint_passPointer() {
 	// Output: T {
 	// 	X: <cycle>
 	// }
+}
+
+type prettyPrinter struct {
+	x, y, z int
+}
+
+func (p prettyPrinter) PrettyPrint() string {
+	return fmt.Sprintf("<%d, %d, %d>", p.x, p.y, p.z)
+}
+
+func ExamplePrint_prettyPrinter() {
+	Print(os.Stdout, prettyPrinter{5, 6, 7})
+	// Output: <5, 6, 7>
 }

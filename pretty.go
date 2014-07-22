@@ -1,9 +1,9 @@
-//Package pp provides a pretty-printer for Go types. It produces a
-// lightweight, Go-syntax-like output.  It elides some type information
-// and syntactic details.  The intent is to show a data structure, such
-// as an abstract syntax tree, without much clutter.  It also supports
-// printing to the dot language of graphviz!
-package pp
+//Package pretty provides a pretty-printer for Go types. It produces a
+// lightweight, Go-syntax-like output. It elides some type information
+// and syntactic details. The intent is to show a data structure, such
+// as an abstract syntax tree, without much clutter. It also supports
+// printing to the dot language of graphviz.
+package pretty
 
 import (
 	"bytes"
@@ -11,36 +11,33 @@ import (
 	"io"
 	"reflect"
 	"strconv"
-
-	"github.com/eaburns/eq"
 )
 
+// A PrettyPrinter implements the PrettyPrint method.
+type PrettyPrinter interface {
+	// PrettyPrint returns a string, overriding the output of Print.
+	PrettyPrint() string
+}
+
 // Print pretty-prints the value to the given writer.
-// Print prunes cycles.  Recall that if you pass a cyclic object as a
-// value, a copy is made.  The copy is not part of the cycle.
+// If a type implementing PrettyPrinter is encountered, its PrettyPrint
+// method is used to print it. Print prunes cycles.
+//
+// Recall that if you pass a cyclic object as a
+// value, a copy is made. The copy is not part of the cycle.
 func Print(out io.Writer, v interface{}) (err error) {
 	defer recoverErr(&err)
 	print(out, make(map[reflect.Value]bool), "\n", reflect.ValueOf(v))
 	return err
 }
 
-// String wraps Print, printing the value to a string. If an error occurs, the empty string
-// is returned along with the error.
-func String(v interface{}) (string, error) {
+// String wraps Print, printing the value to a string.
+func String(v interface{}) string {
 	buf := bytes.NewBuffer(nil)
 	if err := Print(buf, v); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
-// MustString is just like String, but it panics on error.
-func MustString(v interface{}) string {
-	s, err := String(v)
-	if err != nil {
 		panic(err)
 	}
-	return s
+	return buf.String()
 }
 
 func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
@@ -54,8 +51,8 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 	}
 	path[v] = true
 	defer func() { path[v] = false }()
-	if strer, ok := v.Interface().(fmt.Stringer); ok {
-		pr(out, "%s", strer)
+	if pper, ok := v.Interface().(PrettyPrinter); ok {
+		pr(out, "%s", pper.PrettyPrint())
 		return
 	}
 	switch v.Kind() {
@@ -99,8 +96,8 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 		indent2 := indent + "\t"
 		for i := 0; i < t.NumField(); i++ {
 			f := t.Field(i)
-			if !exported(&f) || zero(v.Field(i)) {
-				// Don't output unexported fields or zero-valued fields.`
+			if !exported(&f) {
+				// Don't output unexported fields.
 				continue
 			}
 			pr(out, "%s%s: ", indent2, f.Name)
@@ -143,8 +140,8 @@ func dot(out io.Writer, seen map[reflect.Value]int, n int, v reflect.Value) (nd,
 		return m, n
 	}
 	defer func() { seen[v] = nd }()
-	if strer, ok := v.Interface().(fmt.Stringer); ok {
-		return node(out, n, "%s", strer)
+	if pper, ok := v.Interface().(PrettyPrinter); ok {
+		return node(out, n, "%s", pper.PrettyPrint())
 	}
 	switch v.Kind() {
 	case reflect.Bool:
@@ -189,8 +186,8 @@ func dot(out io.Writer, seen map[reflect.Value]int, n int, v reflect.Value) (nd,
 		seen[v] = n
 		for i := 0; i < t.NumField(); i++ {
 			f := t.Field(i)
-			if !exported(&f) || zero(v.Field(i)) {
-				// Don't output unexported fields or zero-valued fields.
+			if !exported(&f) {
+				// Don't output unexported fields.
 				continue
 			}
 			var m int
@@ -248,14 +245,4 @@ func recoverErr(err *error) {
 	} else {
 		panic(*err)
 	}
-}
-
-// Returns true if the value is the zero value of its type, or if it is a
-// pointer to a zero value.
-func zero(v reflect.Value) bool {
-	if v.Kind() == reflect.Ptr || v.Kind() == reflect.Interface {
-		return v.IsNil() || zero(v.Elem())
-	}
-	z := reflect.Zero(v.Type())
-	return eq.Deep(v.Interface(), z.Interface())
 }
