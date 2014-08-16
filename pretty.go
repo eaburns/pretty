@@ -14,26 +14,29 @@ import (
 	"strconv"
 )
 
-// Indent is string used to indent new lines.
+// Indent is the string used to denote a single level of indentation.
+// New lines are indented by a series of Indents, based on the level of nesting.
 var Indent = "\t"
 
 // A PrettyPrinter implements the PrettyPrint method.
 type PrettyPrinter interface {
-	// PrettyPrint returns a string, overriding the output of Print.
+	// PrettyPrint returns a string, overriding the default pretty-print format.
 	PrettyPrint() string
 }
 
-// Fprint pretty-prints a value to the given writer.
-// If a type implementing PrettyPrinter is encountered, its PrettyPrint
-// method is used to print it. Print prunes cycles.
+// Fprint prints a pretty-looking version of a value to an io.Writer.
+//
+// If a type implementing PrettyPrinter is encountered then its PrettyPrint
+// method is used to print it.
 //
 // When printing maps with keys that are strings, integer types, floating point
 // types, or bools, elements are printed in increasing order of their keys (for bools,
 // false < true). When printing maps with any other type of key, elements are
 // printed in an arbitrary order, which may differ with each call to Fprint.
 //
-// Recall that if you pass a cyclic object as a
-// value, a copy is made. The copy is not part of the cycle.
+// Fprint prunes cycles. Recall that passing a value makes a copy. The copy is not
+// part of a cycle. If this is undesired, pass a pointer to the value. See the PassPointer
+// and PassValue examples.
 func Fprint(out io.Writer, v interface{}) (err error) {
 	defer func() {
 		if r := recover(); r == nil {
@@ -48,12 +51,12 @@ func Fprint(out io.Writer, v interface{}) (err error) {
 	return err
 }
 
-// Print pretty-prints a value to os.Stdout.
+// Print prints a pretty-looking version of a value to os.Stdout.
 func Print(v interface{}) error {
 	return Fprint(os.Stdout, v)
 }
 
-// String pretty-prints a value, returning it as a string.
+// String prints a pretty-looking version of a value, returning it as a string.
 func String(v interface{}) string {
 	buf := bytes.NewBuffer(nil)
 	if err := Fprint(buf, v); err != nil {
