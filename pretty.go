@@ -13,6 +13,9 @@ import (
 	"strconv"
 )
 
+// Indent is string used to indent new lines.
+var Indent = "\t"
+
 // A PrettyPrinter implements the PrettyPrint method.
 type PrettyPrinter interface {
 	// PrettyPrint returns a string, overriding the output of Print.
@@ -86,7 +89,7 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 
 	case reflect.Array, reflect.Slice:
 		pr(out, "[")
-		indent2 := indent + "\t"
+		indent2 := indent + Indent
 		for i := 0; i < v.Len(); i++ {
 			pr(out, indent2)
 			print(out, path, indent2, v.Index(i))
@@ -122,7 +125,7 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 func printStruct(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
 	t := v.Type()
 	pr(out, "%s{", t.Name())
-	indent2 := indent + "\t"
+	indent2 := indent + Indent
 
 	var u, e bool
 	for i := 0; i < t.NumField(); i++ {

@@ -65,3 +65,14 @@ func ExamplePrint_exportedAndUnexportedStruct() {
 	// 	…
 	// }
 }
+
+func ExamplePrint_Indent() {
+	orig := Indent
+	Indent = "----"
+	Print(T2{})
+	Indent = orig
+	// Output: T2{
+	// ----A: 0
+	// ----…
+	// }
+}
