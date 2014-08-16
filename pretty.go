@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 )
 
@@ -25,6 +26,11 @@ type PrettyPrinter interface {
 // Fprint pretty-prints a value to the given writer.
 // If a type implementing PrettyPrinter is encountered, its PrettyPrint
 // method is used to print it. Print prunes cycles.
+//
+// When printing maps with keys that are strings, integer types, floating point
+// types, or bools, elements are printed in increasing order of their keys (for bools,
+// false < true). When printing maps with any other type of key, elements are
+// printed in an arbitrary order, which may differ with each call to Fprint.
 //
 // Recall that if you pass a cyclic object as a
 // value, a copy is made. The copy is not part of the cycle.
@@ -109,12 +115,13 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 	case reflect.Struct:
 		printStruct(out, path, indent, v)
 
+	case reflect.Map:
+		printMap(out, path, indent, v)
+
 	case reflect.Chan:
 		pr(out, "<chan>")
 	case reflect.Func:
 		pr(out, "<function>")
-	case reflect.Map:
-		pr(out, "<map>")
 	case reflect.UnsafePointer:
 		pr(out, "<unsafe pointer>")
 	case reflect.Invalid:
@@ -147,6 +154,60 @@ func printStruct(out io.Writer, path map[reflect.Value]bool, indent string, v re
 		pr(out, "%s…", indent2)
 	}
 	pr(out, "%s}", indent)
+}
+
+func printMap(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
+	t := v.Type()
+	pr(out, "%s{", t.Name())
+	indent2 := indent + Indent
+	keys := v.MapKeys()
+	sort.Sort(values(keys)) // Just a best-effort sorting.
+	for _, k := range keys {
+		pr(out, "%s", indent2)
+		print(out, path, indent2, k)
+		pr(out, ": ")
+		print(out, path, indent2, v.MapIndex(k))
+	}
+	pr(out, "%s}", indent)
+}
+
+type values []reflect.Value
+
+func (vs values) Len() int      { return len(vs) }
+func (vs values) Swap(i, j int) { vs[i], vs[j] = vs[j], vs[i] }
+func (vs values) Less(i, j int) bool {
+	a, b := vs[i], vs[j]
+	if a.Kind() != b.Kind() {
+		panic("different kinds")
+	}
+
+	switch a.Kind() {
+	case reflect.Bool:
+		var aint, bint int
+		if a.Bool() {
+			aint = 1
+		}
+		if b.Bool() {
+			bint = 1
+		}
+		return aint < bint
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return a.Int() < b.Int()
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return a.Uint() < b.Uint()
+
+	case reflect.Float32, reflect.Float64:
+		return a.Float() < b.Float()
+
+	case reflect.String:
+		return a.String() < b.String()
+
+	default:
+		// Don't bother sorting any other kinds.
+		return false
+	}
 }
 
 func pr(out io.Writer, f string, args ...interface{}) {

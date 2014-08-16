@@ -76,3 +76,17 @@ func ExamplePrint_Indent() {
 	// ----…
 	// }
 }
+
+func ExamplePrint_map() {
+	type T map[string]int
+	Print(T{
+		"a": 5,
+		"b": 6,
+		"α": 7,
+	})
+	// Output: T{
+	// 	"a": 5
+	// 	"b": 6
+	//	"α": 7
+	// }
+}
