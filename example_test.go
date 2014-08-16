@@ -159,6 +159,12 @@ func ExamplePrint_array() {
 	// ]
 }
 
+func ExamplePrint_emptySlice() {
+	type T []int
+	Print(T{})
+	// Output: []
+}
+
 func ExamplePrint_Indent() {
 	type T struct{ A, b int }
 	orig := Indent

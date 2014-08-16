@@ -97,13 +97,7 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 		pr(out, "%f", v.Complex())
 
 	case reflect.Array, reflect.Slice:
-		pr(out, "[")
-		indent2 := indent + Indent
-		for i := 0; i < v.Len(); i++ {
-			pr(out, indent2)
-			print(out, path, indent2, v.Index(i))
-		}
-		pr(out, indent+"]")
+		printArray(out, path, indent, v)
 
 	case reflect.Interface, reflect.Ptr:
 		if v.IsNil() {
@@ -130,6 +124,20 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 	case reflect.Invalid:
 		pr(out, "<invalid>")
 	}
+}
+
+func printArray(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
+	if v.Len() == 0 {
+		pr(out, "[]")
+		return
+	}
+	pr(out, "[")
+	indent2 := indent + Indent
+	for i := 0; i < v.Len(); i++ {
+		pr(out, indent2)
+		print(out, path, indent2, v.Index(i))
+	}
+	pr(out, indent+"]")
 }
 
 func printStruct(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
