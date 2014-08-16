@@ -12,6 +12,8 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Indent is the string used to denote a single level of indentation.
@@ -228,5 +230,6 @@ func pr(out io.Writer, f string, args ...interface{}) {
 }
 
 func exported(f *reflect.StructField) bool {
-	return len(f.PkgPath) == 0
+	r, _ := utf8.DecodeRuneInString(f.Name)
+	return unicode.IsUpper(r)
 }

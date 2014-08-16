@@ -63,6 +63,13 @@ func ExamplePrint_exportedAndUnexportedStructFields() {
 	// }
 }
 
+func ExamplePrint_anonymousField() {
+	type t int
+	type S struct{ t }
+	Print(S{})
+	// Output: S{…}
+}
+
 func ExamplePrint_invalid() {
 	Print(nil)
 	// Output: nil
