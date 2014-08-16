@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"strconv"
 )
@@ -18,13 +19,13 @@ type PrettyPrinter interface {
 	PrettyPrint() string
 }
 
-// Print pretty-prints the value to the given writer.
+// Fprint pretty-prints a value to the given writer.
 // If a type implementing PrettyPrinter is encountered, its PrettyPrint
 // method is used to print it. Print prunes cycles.
 //
 // Recall that if you pass a cyclic object as a
 // value, a copy is made. The copy is not part of the cycle.
-func Print(out io.Writer, v interface{}) (err error) {
+func Fprint(out io.Writer, v interface{}) (err error) {
 	defer func() {
 		if r := recover(); r == nil {
 			return
@@ -38,10 +39,15 @@ func Print(out io.Writer, v interface{}) (err error) {
 	return err
 }
 
-// String wraps Print, printing the value to a string.
+// Print pretty-prints a value to os.Stdout.
+func Print(v interface{}) error {
+	return Fprint(os.Stdout, v)
+}
+
+// String pretty-prints a value, returning it as a string.
 func String(v interface{}) string {
 	buf := bytes.NewBuffer(nil)
-	if err := Print(buf, v); err != nil {
+	if err := Fprint(buf, v); err != nil {
 		panic(err)
 	}
 	return buf.String()

@@ -1,9 +1,6 @@
 package pretty
 
-import (
-	"fmt"
-	"os"
-)
+import "fmt"
 
 // Recall that if you pass a cyclic object by value then a copy is made.
 // The copy is not part of the cycle.
@@ -11,7 +8,7 @@ func ExamplePrint_passValue() {
 	type T struct{ X *T }
 	var t T
 	t.X = &t
-	Print(os.Stdout, t)
+	Print(t)
 	// Output: T {
 	// 	X: T {
 	// 		X: <cycle>
@@ -26,7 +23,7 @@ func ExamplePrint_passPointer() {
 	type T struct{ X *T }
 	var t T
 	t.X = &t
-	Print(os.Stdout, &t)
+	Print(&t)
 	// Output: T {
 	// 	X: <cycle>
 	// }
@@ -41,6 +38,6 @@ func (p prettyPrinter) PrettyPrint() string {
 }
 
 func ExamplePrint_prettyPrinter() {
-	Print(os.Stdout, prettyPrinter{5, 6, 7})
+	Print(prettyPrinter{5, 6, 7})
 	// Output: <5, 6, 7>
 }
