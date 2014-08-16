@@ -48,13 +48,13 @@ func ExamplePrint_emptyStruct() {
 	// Output: T{}
 }
 
-func ExamplePrint_unexportedStruct() {
+func ExamplePrint_unexportedStructFields() {
 	type T struct{ a int }
 	Print(T{})
 	// Output: T{…}
 }
 
-func ExamplePrint_exportedAndUnexportedStruct() {
+func ExamplePrint_exportedAndUnexportedStructFields() {
 	type T struct{ A, b int }
 	Print(T{})
 	// Output: T{
