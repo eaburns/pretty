@@ -104,19 +104,7 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 		pr(out, strconv.Quote(v.String()))
 
 	case reflect.Struct:
-		t := v.Type()
-		pr(out, "%s {", t.Name())
-		indent2 := indent + "\t"
-		for i := 0; i < t.NumField(); i++ {
-			f := t.Field(i)
-			if !exported(&f) {
-				// Don't output unexported fields.
-				continue
-			}
-			pr(out, "%s%s: ", indent2, f.Name)
-			print(out, path, indent2, v.Field(i))
-		}
-		pr(out, "%s}", indent)
+		printStruct(out, path, indent, v)
 
 	case reflect.Chan:
 		pr(out, "<chan>")
@@ -129,6 +117,33 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 	case reflect.Invalid:
 		pr(out, "<invalid>")
 	}
+}
+
+func printStruct(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
+	t := v.Type()
+	pr(out, "%s {", t.Name())
+	indent2 := indent + "\t"
+
+	var u, e bool
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		if !exported(&f) {
+			u = true
+			continue
+		}
+		e = true
+		pr(out, "%s%s: ", indent2, f.Name)
+		print(out, path, indent2, v.Field(i))
+	}
+	if !e {
+		// No exported fields, so don't put '}' on a new line.
+		indent = ""
+		indent2 = ""
+	}
+	if u {
+		pr(out, "%s…", indent2)
+	}
+	pr(out, "%s}", indent)
 }
 
 func pr(out io.Writer, f string, args ...interface{}) {

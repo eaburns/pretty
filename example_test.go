@@ -41,3 +41,27 @@ func ExamplePrint_prettyPrinter() {
 	Print(prettyPrinter{5, 6, 7})
 	// Output: <5, 6, 7>
 }
+
+type T0 struct{}
+
+func ExamplePrint_emptyStruct() {
+	Print(T0{})
+	// Output: T0 {}
+}
+
+type T1 struct{ a int }
+
+func ExamplePrint_unexportedStruct() {
+	Print(T1{})
+	// Output: T1 {…}
+}
+
+type T2 struct{ A, b int }
+
+func ExamplePrint_exportedAndUnexportedStruct() {
+	Print(T2{})
+	// Output: T2 {
+	//	A: 0
+	// 	…
+	// }
+}
