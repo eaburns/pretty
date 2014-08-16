@@ -42,36 +42,34 @@ func ExamplePrint_prettyPrinter() {
 	// Output: <5, 6, 7>
 }
 
-type T0 struct{}
-
 func ExamplePrint_emptyStruct() {
-	Print(T0{})
-	// Output: T0{}
+	type T struct{}
+	Print(T{})
+	// Output: T{}
 }
-
-type T1 struct{ a int }
 
 func ExamplePrint_unexportedStruct() {
-	Print(T1{})
-	// Output: T1{…}
+	type T struct{ a int }
+	Print(T{})
+	// Output: T{…}
 }
 
-type T2 struct{ A, b int }
-
 func ExamplePrint_exportedAndUnexportedStruct() {
-	Print(T2{})
-	// Output: T2{
+	type T struct{ A, b int }
+	Print(T{})
+	// Output: T{
 	//	A: 0
 	// 	…
 	// }
 }
 
 func ExamplePrint_Indent() {
+	type T struct{ A, b int }
 	orig := Indent
 	Indent = "----"
-	Print(T2{})
+	Print(T{})
 	Indent = orig
-	// Output: T2{
+	// Output: T{
 	// ----A: 0
 	// ----…
 	// }
