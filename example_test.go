@@ -9,8 +9,8 @@ func ExamplePrint_passValue() {
 	var t T
 	t.X = &t
 	Print(t)
-	// Output: T {
-	// 	X: T {
+	// Output: T{
+	// 	X: T{
 	// 		X: <cycle>
 	//	}
 	// }
@@ -24,7 +24,7 @@ func ExamplePrint_passPointer() {
 	var t T
 	t.X = &t
 	Print(&t)
-	// Output: T {
+	// Output: T{
 	// 	X: <cycle>
 	// }
 }
@@ -46,21 +46,21 @@ type T0 struct{}
 
 func ExamplePrint_emptyStruct() {
 	Print(T0{})
-	// Output: T0 {}
+	// Output: T0{}
 }
 
 type T1 struct{ a int }
 
 func ExamplePrint_unexportedStruct() {
 	Print(T1{})
-	// Output: T1 {…}
+	// Output: T1{…}
 }
 
 type T2 struct{ A, b int }
 
 func ExamplePrint_exportedAndUnexportedStruct() {
 	Print(T2{})
-	// Output: T2 {
+	// Output: T2{
 	//	A: 0
 	// 	…
 	// }

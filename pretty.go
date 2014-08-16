@@ -121,7 +121,7 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 
 func printStruct(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
 	t := v.Type()
-	pr(out, "%s {", t.Name())
+	pr(out, "%s{", t.Name())
 	indent2 := indent + "\t"
 
 	var u, e bool
