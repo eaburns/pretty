@@ -63,19 +63,77 @@ func ExamplePrint_exportedAndUnexportedStruct() {
 	// }
 }
 
-func ExamplePrint_Indent() {
-	type T struct{ A, b int }
-	orig := Indent
-	Indent = "----"
-	Print(T{})
-	Indent = orig
+func ExamplePrint_invalid() {
+	Print(nil)
+	// Output: nil
+}
+
+func ExamplePrint_nil() {
+	var i *int
+	Print(i)
+	// Output: nil
+}
+
+func ExamplePrint_complex() {
+	Print(3 + 5i)
+	// Output: (3.000000+5.000000i)
+}
+
+func ExamplePrint_boolMap() {
+	type T map[bool]int
+	Print(T{
+		true:  5,
+		false: 6,
+	})
 	// Output: T{
-	// ----A: 0
-	// ----…
+	// 	false: 6
+	// 	true: 5
 	// }
 }
 
-func ExamplePrint_map() {
+func ExamplePrint_intMap() {
+	type T map[int]int
+	Print(T{
+		4: 7,
+		1: 5,
+		2: 6,
+	})
+	// Output: T{
+	// 	1: 5
+	// 	2: 6
+	// 	4: 7
+	// }
+}
+
+func ExamplePrint_uintMap() {
+	type T map[uint]int
+	Print(T{
+		4: 7,
+		1: 5,
+		2: 6,
+	})
+	// Output: T{
+	// 	1: 5
+	// 	2: 6
+	// 	4: 7
+	// }
+}
+
+func ExamplePrint_floatMap() {
+	type T map[float32]int
+	Print(T{
+		4.3: 7,
+		1.1: 5,
+		1.2: 6,
+	})
+	// Output: T{
+	// 	1.100000: 5
+	// 	1.200000: 6
+	// 	4.300000: 7
+	// }
+}
+
+func ExamplePrint_stringMap() {
 	type T map[string]int
 	Print(T{
 		"a": 5,
@@ -86,5 +144,29 @@ func ExamplePrint_map() {
 	// 	"a": 5
 	// 	"b": 6
 	//	"α": 7
+	// }
+}
+
+func ExamplePrint_array() {
+	type T [5]int
+	Print(T{5, 6, 7, 8, 9})
+	// Output: [
+	// 	5
+	// 	6
+	//	7
+	//	8
+	//	9
+	// ]
+}
+
+func ExamplePrint_Indent() {
+	type T struct{ A, b int }
+	orig := Indent
+	Indent = "----"
+	Print(T{})
+	Indent = orig
+	// Output: T{
+	// ----A: 0
+	// ----…
 	// }
 }
