@@ -79,7 +79,11 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 	path[v] = true
 	defer func() { path[v] = false }()
 	if pper, ok := v.Interface().(PrettyPrinter); ok {
-		pr(out, "%s", pper.PrettyPrint())
+		if v.Kind() == reflect.Ptr && v.IsNil() {
+			pr(out, "nil")
+		} else {
+			pr(out, "%s", pper.PrettyPrint())
+		}
 		return
 	}
 	switch v.Kind() {
