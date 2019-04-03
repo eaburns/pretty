@@ -67,6 +67,7 @@ func String(v interface{}) string {
 	return buf.String()
 }
 
+// print returns whether the value is of a non-composite type.
 func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.Value) {
 	if !v.IsValid() {
 		pr(out, "nil")
@@ -151,20 +152,33 @@ func printStruct(out io.Writer, path map[reflect.Value]bool, indent string, v re
 	pr(out, "%s{", t.Name())
 	indent2 := indent + Indent
 
-	var e bool
+	var n int
+	var complex bool
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
-		if !exported(&f) {
+		if !exported(&f) || isEmpty(v.Field(i)) {
 			continue
 		}
-		e = true
-		pr(out, "%s%s: ", indent2, f.Name)
+		n++
+		if isComplex(v.Field(i)) {
+			complex = true
+		}
+	}
+	for i := 0; i < t.NumField(); i++ {
+		f := t.Field(i)
+		if !exported(&f) || isEmpty(v.Field(i)) {
+			continue
+		}
+		if n > 1 || complex {
+			pr(out, "%s%s: ", indent2, f.Name)
+		} else {
+			pr(out, "%s: ", f.Name)
+		}
 		print(out, path, indent2, v.Field(i))
 	}
-	if !e {
-		// No exported fields, so don't put '}' on a new line.
+	if n == 0 || n == 1 && !complex {
+		// Don't put } on its own line.
 		indent = ""
-		indent2 = ""
 	}
 	pr(out, "%s}", indent)
 }
@@ -232,4 +246,28 @@ func pr(out io.Writer, f string, args ...interface{}) {
 func exported(f *reflect.StructField) bool {
 	r, _ := utf8.DecodeRuneInString(f.Name)
 	return unicode.IsUpper(r)
+}
+
+func isEmpty(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Array, reflect.Slice, reflect.Map:
+		return v.Len() == 0
+	case reflect.Interface, reflect.Ptr:
+		return v.IsNil()
+	default:
+		return false
+	}
+}
+
+func isComplex(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Struct:
+		return true
+	case reflect.Array, reflect.Slice, reflect.Map:
+		return true
+	case reflect.Interface, reflect.Ptr:
+		return isComplex(v.Elem())
+	default:
+		return false
+	}
 }
