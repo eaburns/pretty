@@ -151,11 +151,10 @@ func printStruct(out io.Writer, path map[reflect.Value]bool, indent string, v re
 	pr(out, "%s{", t.Name())
 	indent2 := indent + Indent
 
-	var u, e bool
+	var e bool
 	for i := 0; i < t.NumField(); i++ {
 		f := t.Field(i)
 		if !exported(&f) {
-			u = true
 			continue
 		}
 		e = true
@@ -166,9 +165,6 @@ func printStruct(out io.Writer, path map[reflect.Value]bool, indent string, v re
 		// No exported fields, so don't put '}' on a new line.
 		indent = ""
 		indent2 = ""
-	}
-	if u {
-		pr(out, "%s…", indent2)
 	}
 	pr(out, "%s}", indent)
 }
