@@ -51,23 +51,20 @@ func ExamplePrint_emptyStruct() {
 func ExamplePrint_unexportedStructFields() {
 	type T struct{ a int }
 	Print(T{})
-	// Output: T{…}
+	// Output: T{}
 }
 
 func ExamplePrint_exportedAndUnexportedStructFields() {
 	type T struct{ A, b int }
 	Print(T{})
-	// Output: T{
-	//	A: 0
-	// 	…
-	// }
+	// Output: T{A: 0}
 }
 
 func ExamplePrint_anonymousField() {
 	type t int
 	type S struct{ t }
 	Print(S{})
-	// Output: S{…}
+	// Output: S{}
 }
 
 func ExamplePrint_invalid() {
@@ -172,14 +169,14 @@ func ExamplePrint_emptySlice() {
 	// Output: []
 }
 
-func ExamplePrint_Indent() {
-	type T struct{ A, b int }
+func ExamplePrint_indent() {
+	type T struct{ A, b, C int }
 	orig := Indent
 	Indent = "----"
-	Print(T{})
+	Print(T{A: 5, C: 6})
 	Indent = orig
 	// Output: T{
-	// ----A: 0
-	// ----…
+	// ----A: 5
+	// ----C: 6
 	// }
 }

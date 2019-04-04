@@ -20,8 +20,8 @@ import (
 // New lines are indented by a series of Indents, based on the level of nesting.
 var Indent = "\t"
 
-// A PrettyPrinter implements the PrettyPrint method.
-type PrettyPrinter interface {
+// A Printer implements the PrettyPrint method.
+type Printer interface {
 	// PrettyPrint returns a string, overriding the default pretty-print format.
 	PrettyPrint() string
 }
@@ -79,7 +79,7 @@ func print(out io.Writer, path map[reflect.Value]bool, indent string, v reflect.
 	}
 	path[v] = true
 	defer func() { path[v] = false }()
-	if pper, ok := v.Interface().(PrettyPrinter); ok {
+	if pper, ok := v.Interface().(Printer); ok {
 		if v.Kind() == reflect.Ptr && v.IsNil() {
 			pr(out, "nil")
 		} else {
